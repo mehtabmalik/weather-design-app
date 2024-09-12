@@ -1,42 +1,58 @@
-import React, { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
-const api = {
+const apiData = {
   key: "07acc78e2200198960a931df88bc4fbb",
-  base: "https://api.openweathermap.org/data/3.0/onecall",
-  lat: 31.5497, // Latitude for Lahore, Pakistan
-  lon: 74.3436, // Longitude for Lahore, Pakistan
-  units: "metric", // Metric units for temperature (Celsius)
+  base: "https://api.openweathermap.org/data/2.5/forecast?",
+  cnt: 44,
 };
 const fetchWeatherForecast = async () => {
-  try {
-    console.log("apI:::", api);
-    const { data } = await axios.get(
-      `${api.base}?lat=${api.lat}&lon=${api.lon}&exclude=hourly,minutely&units=${api.units}&appid=${api.key}`
-    );
-    console.log("Response Data:::", JSON.stringify(data));
-    return data;
-  } catch (error) {
-    console.log("Error::::", error);
-  }
+  const { data } = await axios.get(
+    `${apiData.base}q=Pakistan&cnt=${apiData.cnt}&APPID=${apiData.key}`
+  );
+  return data;
 };
-
 const WeatherReport = () => {
-  // const { data, isLoading, error } = useQuery({
-  //   queryKey: ["weatherForecast"],
-  //   queryFn: fetchWeatherForecast,
-  // });
+  const { data, error, isLoading } = useQuery({
+    queryKey: ["Pakistan"],
+    queryFn: fetchWeatherForecast,
+  });
 
-  useEffect(() => {
-    fetchWeatherForecast();
-    return () => {};
-  }, []);
-
-  // if (isLoading) return <p>Loading weather forecast...</p>;
-  // if (error) return <p>Error fetching weather data</p>;
-
-  return <div className="p-5">Weather</div>;
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>{error.message}</div>;
+  return (
+    <div className="p-4">
+      <h1 className="font-semibold text-2xl mb-4">
+        Weather Forecast for Pakistan
+      </h1>
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        {data.list.map((day, index) => (
+          <div className=" p-4 rounded-lg shadow-md mx-2 mb-4 flex flex-col items-center text-center border-2">
+            <div className="border-b-2 w-full pb-2">
+              <h1 className="text-xl">Forcast</h1>
+            </div>
+            <div key={index} className="pt-3">
+              <p className="font-bold">
+                {new Date(day.dt * 1000).toDateString()}
+              </p>
+              <img
+                src={`http://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`}
+                alt={day.weather[0].description}
+                className="my-2"
+              />
+              <div>
+                <p className="text-3xl font-bold">
+                  <p>{Math.floor(day.main.temp - 273.15)}°C</p>
+                </p>
+                <p className="text-lg">{day.weather[0].main}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 export default WeatherReport;
